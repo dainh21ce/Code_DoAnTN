@@ -1,0 +1,3005 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Điều khiển và giám sát nhà yến</title>
+  <style>
+    /* ==================== CƠ BẢN ==================== */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(
+        180deg,
+        #4CB5F5 0%,
+        #B7B8B6 35%,
+        #34675C 70%,
+        #B3C100 100%
+      );
+    }
+
+    /* ==================== HEADER ==================== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      color: #344767;
+      letter-spacing: 0.5px;
+      flex: 1;
+    }
+
+    /* ==================== CONTAINER CHÍNH ==================== */
+    .analytics-report {
+      max-width: 1400px;
+      margin: 8px auto;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+    }
+
+    /* ==================== LAYOUT ==================== */
+    .layout {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .left-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 250px;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ==================== NÚT CHUYỂN TẦNG ==================== */
+    .floor-switcher {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .floor-buttons-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .floor-btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .floor-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .floor-btn.active {
+      background: white;
+      color: #667eea;
+      border-color: white;
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.4);
+    }
+
+    .floor-btn.active:hover {
+      transform: translateY(-2px);
+    }
+
+    .camera-btn {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    }
+
+    .camera-btn:hover {
+      background: linear-gradient(135deg, #EE5A52 0%, #FF7643 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 107, 107, 0.6);
+    }
+
+    /* ==================== ĐIỀU KHIỂN THIẾT BỊ ==================== */
+    .device-controls {
+      padding: 15px;
+      background-color: #cce6e9;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .device-controls.active {
+      display: block;
+    }
+
+    .device-controls h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+      color: #333;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .device-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .device-control span {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      flex: 0 1 auto;
+      max-width: 70%;
+      white-space: normal;
+    }
+
+    .toggle-btn {
+      flex-shrink: 0;
+      width: 90px;
+      padding: 7px 0;
+      border: none;
+      border-radius: 999px;
+      background-color: #ced4da;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .toggle-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .toggle-btn.active {
+      background-color: #28a745;
+    }
+
+    /* ==================== DASHBOARD TỔNG QUAN ==================== */
+    .dashboard-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .stat-card.active {
+      display: block;
+    }
+
+    .stat-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #666;
+      font-weight: 700;
+    }
+
+    .stat-card p {
+      margin: 0;
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    /* ==================== ĐỒ THỊ ==================== */
+    .charts-container {
+      margin-bottom: 30px;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 20px;
+    }
+
+    .chart-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .chart-card.active {
+      display: block;
+    }
+
+    .chart-card h4 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      color: #333;
+      text-align: center;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 350px;
+      position: relative;
+    }
+
+    /* ==================== CAMERA TRONG MAIN CONTENT ==================== */
+    .camera-main-container {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .camera-main-container.active {
+      display: block;
+    }
+
+    .camera-main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .camera-main-header h3 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .camera-close-btn {
+      padding: 8px 20px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .camera-close-btn:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+    }
+
+    .camera-main-video-section {
+      margin-bottom: 25px;
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .camera-main-video-frame {
+      width: 100%;
+      height: 500px;
+      border: none;
+      border-radius: 10px;
+      background: #000;
+    }
+
+    .camera-main-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .camera-main-controls button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .camera-main-controls button:hover {
+      transform: translateY(-2px);
+    }
+
+    .detection-main-section {
+      display: none;
+      margin-top: 25px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      animation: slideInUp 0.5s ease;
+    }
+
+    .detection-main-section.active {
+      display: block;
+    }
+
+    /* ==================== BÁO CÁO ==================== */
+    .report-generation {
+      margin-bottom: 20px;
+    }
+
+    .report-filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input[type="date"] {
+      padding: 9px 12px;
+      border: 1.5px solid #ced4da;
+      border-radius: 7px;
+      font-size: 13px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      flex: 0 0 auto;
+      width: 145px;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    input[type="date"]:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      outline: none;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: background-color 0.3s, transform 0.2s;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .datetime-info {
+      margin-left: auto;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      font-size: 13px;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    /* ==================== MENU HAMBURGER ==================== */
+    .hamburger-container {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 100;
+    }
+
+    .hamburger-btn {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      padding: 0;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .hamburger-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .hamburger-btn:active {
+      transform: scale(0.95);
+    }
+
+    .hamburger-btn span {
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .hamburger-btn.active span:nth-child(1) {
+      transform: rotate(45deg) translate(7px, 7px);
+    }
+
+    .hamburger-btn.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger-btn.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      min-width: 280px;
+      z-index: 1000;
+      animation: slideDown 0.3s ease;
+    }
+
+    .menu-dropdown.show {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .menu-dropdown button {
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-dropdown button:hover {
+      transform: translateX(5px);
+    }
+
+    .menu-row-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .menu-row-bottom {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    #show-weather-btn {
+      background: linear-gradient(135deg, #4CB5F5 0%, #667eea 100%);
+      color: white;
+    }
+
+    #show-weather-btn:hover {
+      background: linear-gradient(135deg, #3a9fd8 0%, #5568d3 100%);
+    }
+
+    #show-energy-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    #show-energy-btn:hover {
+      background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+    }
+
+    #show-stats-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+
+    #show-stats-btn:hover {
+      background: linear-gradient(135deg, #e082ea 0%, #e4465b 100%);
+    }
+
+    /* ==================== MODAL CƠ BẢN ==================== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .modal-content {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 20px;
+      padding: 0;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: #333;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: #dc3545;
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      transform: scale(1.1);
+      background: #c82333;
+    }
+
+    /* ==================== MODAL THỜI TIẾT ==================== */
+    .weather-modal-body {
+      padding: 0;
+    }
+
+    .weather-hero-card {
+      background: linear-gradient(135deg, #5DADE2 0%, #85C1E2 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .weather-hero-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: pulse 15s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.3; }
+    }
+
+    .weather-hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .weather-main-icon {
+      font-size: 100px;
+      margin: 10px 0;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+    }
+
+    .weather-main-temp {
+      font-size: 72px;
+      font-weight: 700;
+      margin: 15px 0 5px 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: -2px;
+    }
+
+    .weather-main-desc {
+      font-size: 20px;
+      margin: 8px 0;
+      opacity: 0.95;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .weather-main-location {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .weather-details-section {
+      padding: 25px;
+      background: #fff;
+    }
+
+    .weather-details-grid-new {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .weather-info-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      border-left: 4px solid #5DADE2;
+      transition: all 0.3s ease;
+    }
+
+    .weather-info-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-left-color: #3498db;
+    }
+
+    .weather-info-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .weather-info-label {
+      font-size: 12px;
+      color: #6c757d;
+      margin-bottom: 5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .weather-info-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .weather-footer {
+      padding: 15px 25px;
+      background: #f8f9fa;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .weather-footer p {
+      margin: 3px 0;
+    }
+
+    /* ==================== MODAL ĐIỆN NĂNG ==================== */
+    .energy-section {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 5px solid #667eea;
+    }
+
+    .energy-section h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .energy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .energy-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .energy-item-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .energy-item-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .config-section {
+      background: #fff3cd;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 5px solid #ffc107;
+      margin-bottom: 25px;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .config-item label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .config-item input {
+      padding: 8px;
+      border: 2px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .config-item input:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    .energy-modal-content {
+      max-width: 900px;
+      padding: 30px;
+    }
+
+    .energy-modal-header {
+      border-bottom: 3px solid #667eea;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+    }
+
+    /* ==================== MODAL THỐNG KÊ ==================== */
+    .stats-modal-content {
+      max-width: 1200px;
+      padding: 0;
+    }
+
+    .stats-modal-body {
+      padding: 25px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .stats-modal-body::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .stats-modal-body::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .stats-modal-body::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 10px;
+    }
+
+    .stats-summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmin(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stats-summary-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      border-radius: 12px;
+      color: white;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s;
+    }
+
+    .stats-summary-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stats-summary-card h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 600;
+    }
+
+    .stats-summary-card p {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stats-table-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border-left: 5px solid #667eea;
+    }
+
+    .stats-table-section h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .stats-table {
+      width: 100%;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .stats-table thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .stats-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .stats-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .stats-table tbody tr:hover {
+      background: #f5f5f5;
+      transition: background 0.2s;
+    }
+
+    .stats-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .stats-device-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .stats-device-status.on {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .stats-device-status.off {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .stats-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .stats-filters select,
+    .stats-filters input[type="date"] {
+      padding: 10px 15px;
+      border: 2px solid #ced4da;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .stats-filters select:focus,
+    .stats-filters input[type="date"]:focus {
+      border-color: #667eea;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .stats-filters button {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .stats-filters button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .no-stats-data {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-size: 16px;
+    }
+
+    .no-stats-data-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    /* ==================== DETECTION SECTION ==================== */
+    .detection-section {
+      display: none;
+      margin-top: 25px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      animation: slideInUp 0.5s ease;
+    }
+
+    .detection-section.active {
+      display: block;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .detection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .detection-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .day-selector {
+      display: flex;
+      gap: 8px;
+    }
+
+    .day-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .day-btn:hover {
+      background: #f0f0f0;
+      transform: scale(1.1);
+    }
+
+    .day-btn::after {
+      content: attr(data-count);
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc3545;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .day-btn[data-count="0"]::after {
+      display: none;
+    }
+
+    .day-btn[data-day="1"].active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .day-btn[data-day="2"].active {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border-color: #f093fb;
+      box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+    }
+
+    .day-btn[data-day="3"].active {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border-color: #4facfe;
+      box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+    }
+
+    .detection-frames-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 15px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding: 10px;
+      animation: fadeInGrid 0.5s ease;
+    }
+
+    @keyframes fadeInGrid {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .detection-frames-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .detection-frames-grid::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .detection-frames-grid::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 10px;
+    }
+
+    .detection-frame {
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detection-frame:hover {
+      transform: translateY(-5px);
+    }
+
+    .detection-frames-grid[data-day="1"] .detection-frame {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 3px solid #667eea;
+    }
+
+    .detection-frames-grid[data-day="1"] .detection-frame-image {
+      background: rgba(102, 126, 234, 0.2);
+      border: 2px solid rgba(102, 126, 234, 0.4);
+    }
+
+    .detection-frames-grid[data-day="1"] .detection-frame:hover {
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+      transform: translateY(-8px);
+    }
+
+    .detection-frames-grid[data-day="1"] .detection-frame-info {
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .detection-frames-grid[data-day="1"] .detection-frame-placeholder {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .detection-frames-grid[data-day="2"] .detection-frame {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border: 3px solid #f093fb;
+    }
+
+    .detection-frames-grid[data-day="2"] .detection-frame-image {
+      background: rgba(240, 147, 251, 0.2);
+      border: 2px solid rgba(240, 147, 251, 0.4);
+    }
+
+    .detection-frames-grid[data-day="2"] .detection-frame:hover {
+      box-shadow: 0 8px 20px rgba(240, 147, 251, 0.5);
+      transform: translateY(-8px);
+    }
+
+    .detection-frames-grid[data-day="2"] .detection-frame-info {
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .detection-frames-grid[data-day="2"] .detection-frame-placeholder {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .detection-frames-grid[data-day="3"] .detection-frame {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border: 3px solid #4facfe;
+    }
+
+    .detection-frames-grid[data-day="3"] .detection-frame-image {
+      background: rgba(79, 172, 254, 0.2);
+      border: 2px solid rgba(79, 172, 254, 0.4);
+    }
+
+    .detection-frames-grid[data-day="3"] .detection-frame:hover {
+      box-shadow: 0 8px 20px rgba(79, 172, 254, 0.5);
+      transform: translateY(-8px);
+    }
+
+    .detection-frames-grid[data-day="3"] .detection-frame-info {
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .detection-frames-grid[data-day="3"] .detection-frame-placeholder {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .detection-frame-image {
+      width: 100%;
+      height: 140px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: #999;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detection-frame-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .detection-frame-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .detection-frame-info {
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .detection-frame-time {
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .detection-frame-status {
+      font-style: italic;
+      opacity: 0.9;
+    }
+
+    .no-detection {
+      text-align: center;
+      padding: 50px;
+      color: #999;
+      font-size: 16px;
+      grid-column: 1 / -1;
+    }
+
+    .no-detection-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    .btn-detect {
+      background: #FF6B6B;
+      color: white;
+    }
+
+    .btn-detect:hover {
+      background: #EE5A52;
+    }
+
+    .btn-export {
+      background: #007bff;
+      color: white;
+    }
+
+    .btn-export:hover {
+      background: #0056b3;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body {
+        background-color: #ffffff;
+      }
+
+      .page-header {
+        margin-bottom: 12px;
+      }
+
+      .page-title {
+        font-size: 18px;
+        padding-right: 60px;
+      }
+
+      .analytics-report {
+        margin: 0;
+        padding: 10px;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .layout {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .left-sidebar {
+        width: 100%;
+        min-width: 100%;
+        gap: 15px;
+      }
+
+      .floor-switcher {
+        padding: 10px;
+        gap: 8px;
+      }
+
+      .floor-btn {
+        padding: 10px 15px;
+        font-size: 14px;
+      }
+
+      .camera-btn {
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+
+      .device-control {
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        gap: 10px;
+      }
+
+      .device-control span {
+        font-size: 14px;
+      }
+
+      .toggle-btn {
+        width: 80px;
+        font-weight: 700;
+        padding: 7px 0;
+        font-size: 13px;
+      }
+
+      .dashboard-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        padding: 15px 10px;
+      }
+
+      .stat-card h3 {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .stat-card p {
+        font-size: 20px;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .chart-card {
+        padding: 15px;
+      }
+
+      .chart-card h4 {
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .chart-container {
+        height: 280px;
+      }
+
+      .camera-main-video-frame {
+        height: 300px;
+      }
+
+      .camera-main-controls {
+        flex-direction: column;
+      }
+
+      .camera-main-controls button {
+        width: 100%;
+      }
+
+      .report-filters {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      input[type="date"] {
+        width: 130px;
+        padding: 10px;
+        font-size: 14px;
+      }
+
+      .datetime-info {
+        width: 100%;
+        margin-left: 0;
+        justify-content: center;
+        padding: 12px;
+        background-color: #f0f2f5;
+        border-radius: 8px;
+        font-size: 14px;
+        gap: 20px;
+      }
+
+      .hamburger-container {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 10001;
+      }
+
+      .hamburger-btn {
+        width: 45px;
+        height: 45px;
+      }
+
+      .menu-dropdown {
+        min-width: 220px;
+      }
+
+      .menu-dropdown button {
+        padding: 14px 16px;
+        font-size: 16px;
+      }
+
+      .modal-content {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+      }
+
+      .weather-details-grid-new {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .weather-main-temp {
+        font-size: 60px;
+      }
+
+      .weather-main-icon {
+        font-size: 80px;
+      }
+
+      .weather-hero-card {
+        padding: 30px 20px;
+      }
+      
+      .energy-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .energy-modal-content {
+        padding: 20px;
+      }
+
+      .detection-frames-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .detection-frame-image {
+        height: 120px;
+      }
+
+      .day-selector {
+        gap: 6px;
+      }
+
+      .day-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+      }
+
+      .stats-summary-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .stats-table {
+        overflow-x: auto;
+      }
+      
+      .stats-table table {
+        min-width: 600px;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .analytics-report {
+        margin: 15px;
+        padding: 18px;
+      }
+
+      .left-sidebar {
+        min-width: 220px;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-container {
+        height: 320px;
+      }
+
+      .weather-details-grid-new {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1400px) {
+      .analytics-report {
+        max-width: 1600px;
+      }
+
+      .chart-container {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="analytics-report">
+    <div class="page-header">
+      <h1 class="page-title">Bảng điều khiển</h1>
+      
+      <div class="hamburger-container">
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        
+        <div class="menu-dropdown" id="menu-dropdown">
+          <div class="menu-row-top">
+            <button id="show-weather-btn">🌤️ Thời tiết</button>
+            <button id="show-energy-btn">⚡ Điện năng</button>
+            <button id="show-stats-btn">📊 Thống kê</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- ==================== SIDEBAR ĐIỀU KHIỂN ==================== -->
+      <div class="left-sidebar">
+        <!-- NÚT CHUYỂN TẦNG VÀ CAMERA -->
+        <div class="floor-switcher">
+          <div class="floor-buttons-row">
+            <button class="floor-btn active" data-floor="1">
+              🏢 Tầng 1
+            </button>
+            <button class="floor-btn" data-floor="2">
+              🏢 Tầng 2
+            </button>
+          </div>
+          <button class="camera-btn" id="show-camera-btn-sidebar">
+            📹 Camera Giám Sát
+          </button>
+        </div>
+
+        <!-- ĐIỀU KHIỂN TẦNG 1 -->
+        <div class="device-controls active" data-floor-controls="1">
+          <h3>Điều khiển Tầng 1</h3>
+          <div class="device-control">
+            <span>LED</span>
+            <button class="toggle-btn toggle-led1" data-device="led" data-floor="1">OFF</button>
+          </div>
+          <div class="device-control">
+            <span>Quạt</span>
+            <button class="toggle-btn toggle-fan1" data-device="fan" data-floor="1">OFF</button>
+          </div>
+          <div class="device-control">
+            <span>Sưởi</span>
+            <button class="toggle-btn toggle-heater1" data-device="heater" data-floor="1">OFF</button>
+          </div>
+          <div class="device-control">
+            <span>Phun sương</span>
+            <button class="toggle-btn toggle-fog1" data-device="fog" data-floor="1">OFF</button>
+          </div>
+        </div>
+
+        <!-- ĐIỀU KHIỂN TẦNG 2 -->
+        <div class="device-controls" data-floor-controls="2">
+          <h3>Điều khiển Tầng 2</h3>
+          <div class="device-control">
+            <span>LED</span>
+            <button class="toggle-btn toggle-led2" data-device="led" data-floor="2">OFF</button>
+          </div>
+          <div class="device-control">
+            <span>Quạt</span>
+            <button class="toggle-btn toggle-fan2" data-device="fan" data-floor="2">OFF</button>
+          </div>
+          <div class="device-control">
+            <span>Sưởi</span>
+            <button class="toggle-btn toggle-heater2" data-device="heater" data-floor="2">OFF</button>
+          </div>
+          <div class="device-control">
+            <span>Phun sương</span>
+            <button class="toggle-btn toggle-fog2" data-device="fog" data-floor="2">OFF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== NỘI DUNG CHÍNH ==================== -->
+      <div class="main-content">
+        <div class="dashboard-overview">
+          <!-- TẦNG 1 -->
+          <div class="stat-card active" data-floor-stat="1">
+            <h3>Nhiệt độ Tầng 1</h3>
+            <p id="temp-floor1">--°C</p>
+          </div>
+          <div class="stat-card active" data-floor-stat="1">
+            <h3>Độ ẩm Tầng 1</h3>
+            <p id="hum-floor1">--%</p>
+          </div>
+          
+          <!-- TẦNG 2 -->
+          <div class="stat-card" data-floor-stat="2">
+            <h3>Nhiệt độ Tầng 2</h3>
+            <p id="temp-floor2">--°C</p>
+          </div>
+          <div class="stat-card" data-floor-stat="2">
+            <h3>Độ ẩm Tầng 2</h3>
+            <p id="hum-floor2">--%</p>
+          </div>
+        </div>
+
+        <!-- ==================== CAMERA TRONG MAIN CONTENT ==================== -->
+        <div class="camera-main-container" id="camera-main-container">
+          <div class="camera-main-header">
+            <h3>📹 Camera Giám Sát</h3>
+            <button class="camera-close-btn" onclick="closeCameraMain()">✕ Đóng</button>
+          </div>
+          
+          <div class="camera-main-video-section">
+            <iframe
+              id="camera-main-iframe"
+              src=""
+              class="camera-main-video-frame"
+              allowfullscreen
+            ></iframe>
+
+            <div class="camera-main-controls">
+              <button class="btn-detect" onclick="toggleDetectionMainSection()">
+                🔍 Phát hiện sinh vật lạ
+              </button>
+              <button class="btn-export" onclick="openCameraFull()">
+                ⤢ Mở toàn màn hình
+              </button>
+            </div>
+          </div>
+
+          <div class="detection-main-section" id="detection-main-section">
+            <div class="detection-header">
+              <h3>🔍 Lịch sử phát hiện sinh vật lạ</h3>
+              <div class="day-selector">
+                <button class="day-btn active" data-day="1" data-count="0" onclick="loadDetectionDataMain(1)">1</button>
+                <button class="day-btn" data-day="2" data-count="0" onclick="loadDetectionDataMain(2)">2</button>
+                <button class="day-btn" data-day="3" data-count="0" onclick="loadDetectionDataMain(3)">3</button>
+              </div>
+            </div>
+
+            <div class="detection-frames-grid" id="detection-frames-grid-main" data-day="1">
+              <div class="no-detection">
+                <div class="no-detection-icon">📭</div>
+                <p>Chưa có dữ liệu phát hiện</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-container">
+          <div class="charts-grid">
+            <!-- ĐỒ THỊ TẦNG 1 -->
+            <div class="chart-card active" data-floor-chart="1">
+              <h4>📊 Tầng 1 - Nhiệt độ và Độ ẩm</h4>
+              <div class="chart-container">
+                <canvas id="chart-floor1"></canvas>
+              </div>
+            </div>
+
+            <!-- ĐỒ THỊ TẦNG 2 -->
+            <div class="chart-card" data-floor-chart="2">
+              <h4>📊 Tầng 2 - Nhiệt độ và Độ ẩm</h4>
+              <div class="chart-container">
+                <canvas id="chart-floor2"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-generation">
+          <div class="report-filters">
+            <input type="date" id="start-date" />
+            
+            <div class="datetime-info">
+              <span id="current-time">--:--:--</span>
+              <span id="current-date">--/--/----</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // ==================== CẤU HÌNH SERVER & API ====================
+    const SERVER_URL = window.location.origin;
+    const POLLING_INTERVAL = 3000;
+
+    // ==================== CẤU HÌNH ESP32-CAM ====================
+    const CAMERA_WEB_URL = 'http://172.20.10.14';
+
+    const WEATHER_API_KEY = 'cd7ae1be38555eb75cba7cc6463b7838';
+    const WEATHER_CITY = 'Da Nang';
+    const WEATHER_COUNTRY = 'VN';
+    const WEATHER_UPDATE_INTERVAL = 600000;
+
+    // ==================== BIẾN TOÀN CỤC ====================
+    let weatherData = null;
+    let energyData = null;
+    let lastDataCheck = Date.now();
+    let currentFloor = 1;
+    let currentDetectionDay = 1;
+
+    const tempPoints1 = [];
+    const humPoints1  = [];
+    const tempPoints2 = [];
+    const humPoints2  = [];
+
+    const WEATHER_ICONS = {
+      '01d': '☀️', '01n': '🌙',
+      '02d': '⛅', '02n': '☁️',
+      '03d': '☁️', '03n': '☁️',
+      '04d': '☁️', '04n': '☁️',
+      '09d': '🌧️', '09n': '🌧️',
+      '10d': '🌦️', '10n': '🌧️',
+      '11d': '⛈️', '11n': '⛈️',
+      '13d': '❄️', '13n': '❄️',
+      '50d': '🌫️', '50n': '🌫️'
+    };
+
+    const WEATHER_TRANSLATIONS = {
+      'clear sky': 'Trời quang đãng',
+      'few clouds': 'Ít mây',
+      'scattered clouds': 'Mây rải rác',
+      'broken clouds': 'Nhiều mây',
+      'overcast clouds': 'U ám',
+      'shower rain': 'Mưa rào',
+      'rain': 'Mưa',
+      'light rain': 'Mưa nhẹ',
+      'moderate rain': 'Mưa vừa',
+      'heavy rain': 'Mưa nặng hạt',
+      'thunderstorm': 'Giông bão',
+      'snow': 'Tuyết',
+      'mist': 'Sương mù',
+      'smoke': 'Khói',
+      'haze': 'Sương mù nhẹ',
+      'fog': 'Sương mù dày đặc'
+    };
+
+    // ==================== CHUYỂN TẦNG ====================
+    function switchFloor(floor) {
+      currentFloor = floor;
+      
+      document.querySelectorAll('.floor-btn').forEach(btn => {
+        if (parseInt(btn.dataset.floor) === floor) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      document.querySelectorAll('[data-floor-controls]').forEach(control => {
+        if (parseInt(control.dataset.floorControls) === floor) {
+          control.classList.add('active');
+        } else {
+          control.classList.remove('active');
+        }
+      });
+      
+      document.querySelectorAll('[data-floor-stat]').forEach(stat => {
+        if (parseInt(stat.dataset.floorStat) === floor) {
+          stat.classList.add('active');
+        } else {
+          stat.classList.remove('active');
+        }
+      });
+      
+      document.querySelectorAll('[data-floor-chart]').forEach(chart => {
+        if (parseInt(chart.dataset.floorChart) === floor) {
+          chart.classList.add('active');
+        } else {
+          chart.classList.remove('active');
+        }
+      });
+      
+      console.log(`Đã chuyển sang Tầng ${floor}`);
+    }
+
+    // ==================== NGÀY GIỜ ====================
+    function updateDateTime() {
+      const now = new Date();
+      const timeFormatted = now.toLocaleTimeString('vi-VN', { 
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+      const dateFormatted = now.toLocaleDateString('vi-VN', { 
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+      document.getElementById('current-time').textContent = timeFormatted;
+      document.getElementById('current-date').textContent = dateFormatted;
+    }
+
+    // ==================== BIỂU ĐỒ ====================
+    function calculateScale(dataPoints, isTemperature = false) {
+      if (dataPoints.length === 0) {
+        return isTemperature ? { min: 0, max: 50 } : { min: 0, max: 100 };
+      }
+
+      const values = dataPoints.map(p => p.y).filter(v => v > 0);
+      if (values.length === 0) {
+        return isTemperature ? { min: 0, max: 50 } : { min: 0, max: 100 };
+      }
+
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = max - min;
+
+      const buffer = range * 0.1 || (isTemperature ? 5 : 10);
+      
+      let newMin = Math.floor(min - buffer);
+      let newMax = Math.ceil(max + buffer);
+
+      if (newMin < 0) newMin = 0;
+
+      if (isTemperature) {
+        newMin = Math.floor(newMin / 5) * 5;
+        newMax = Math.ceil(newMax / 5) * 5;
+      } else {
+        newMin = Math.floor(newMin / 10) * 10;
+        newMax = Math.ceil(newMax / 10) * 10;
+      }
+
+      return { min: newMin, max: newMax };
+    }
+
+    function updateChartScale(chart, tempPoints, humPoints) {
+      const tempScale = calculateScale(tempPoints, true);
+      const humScale = calculateScale(humPoints, false);
+
+      const min = Math.min(tempScale.min, humScale.min);
+      const max = Math.max(tempScale.max, humScale.max);
+
+      chart.options.scales.y.min = min;
+      chart.options.scales.y.max = max;
+    }
+
+    const ctx1 = document.getElementById('chart-floor1').getContext('2d');
+    const chart1 = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'Nhiệt độ (°C)',
+          data: tempPoints1,
+          parsing: false,
+          backgroundColor: 'rgba(255, 99, 132, 0.1)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          yAxisID: 'y'
+        }, {
+          label: 'Độ ẩm (%)',
+          data: humPoints1,
+          parsing: false,
+          backgroundColor: 'rgba(54, 162, 235, 0.1)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          yAxisID: 'y'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              title: (context) => {
+                const hour = context[0].parsed.x.toFixed(2);
+                return `Giờ: ${hour}`;
+              },
+              label: (context) => {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y.toFixed(1);
+                return `${label}: ${value}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Nhiệt độ (°C) / Độ ẩm (%)' },
+            beginAtZero: false,
+            min: 0,
+            max: 100,
+            ticks: { stepSize: 5 }
+          },
+          x: {
+            type: 'linear',
+            min: 0,
+            max: 23,
+            title: { display: true, text: 'Giờ trong ngày (0–23)' },
+            ticks: {
+              stepSize: 1,
+              callback: (value) => value.toString()
+            }
+          }
+        }
+      }
+    });
+
+    const ctx2 = document.getElementById('chart-floor2').getContext('2d');
+    const chart2 = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'Nhiệt độ (°C)',
+          data: tempPoints2,
+          parsing: false,
+          backgroundColor: 'rgba(255, 159, 64, 0.1)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          yAxisID: 'y'
+        }, {
+          label: 'Độ ẩm (%)',
+          data: humPoints2,
+          parsing: false,
+          backgroundColor: 'rgba(75, 192, 192, 0.1)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          yAxisID: 'y'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              title: (context) => {
+                const hour = context[0].parsed.x.toFixed(2);
+                return `Giờ: ${hour}`;
+              },
+              label: (context) => {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y.toFixed(1);
+                return `${label}: ${value}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Nhiệt độ (°C) / Độ ẩm (%)' },
+            beginAtZero: false,
+            min: 0,
+            max: 100,
+            ticks: { stepSize: 5 }
+          },
+          x: {
+            type: 'linear',
+            min: 0,
+            max: 23,
+            title: { display: true, text: 'Giờ trong ngày (0–23)' },
+            ticks: {
+              stepSize: 1,
+              callback: (value) => value.toString()
+            }
+          }
+        }
+      }
+    });
+
+    // ==================== TRẠNG THÁI NÚT ====================
+    function setToggleState(btn, state) {
+      if (!btn) return;
+      const isOn = (state || 'OFF').toUpperCase() === 'ON';
+      if (isOn) {
+        btn.classList.add('active');
+        btn.textContent = 'ON';
+      } else {
+        btn.classList.remove('active');
+        btn.textContent = 'OFF';
+      }
+    }
+
+    // ==================== LOAD DATA SERVER ====================
+    function loadHistory(floor) {
+      const floorKey = floor === 1 ? 'floor1' : 'floor2';
+
+      fetch(`${SERVER_URL}/history/${floorKey}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log(`History Floor ${floorKey} loaded:`, data.count, "records");
+          
+          if (data.data && data.data.length > 0) {
+            const tempPoints = floor === 1 ? tempPoints1 : tempPoints2;
+            const humPoints  = floor === 1 ? humPoints1  : humPoints2;
+            const chart      = floor === 1 ? chart1      : chart2;
+            
+            tempPoints.length = 0;
+            humPoints.length  = 0;
+            
+            data.data.forEach(record => {
+              const timestamp = new Date(record.timestamp);
+              const hourFloat = timestamp.getHours() + timestamp.getMinutes()/60 + timestamp.getSeconds()/3600;
+              
+              tempPoints.push({ x: hourFloat, y: record.temperature });
+              humPoints.push({ x: hourFloat, y: record.humidity });
+            });
+            
+            updateChartScale(chart, tempPoints, humPoints);
+            chart.update();
+          }
+        })
+        .catch(err => console.log(`Error loading history floor ${floorKey}:`, err));
+    }
+
+    function fetchStats() {
+      fetch(`${SERVER_URL}/stats`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Stats updated:", data);
+        })
+        .catch(err => console.log("Error fetching stats:", err));
+    }
+
+    function fetchData() {
+      fetch(`${SERVER_URL}/data`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Data received:", data);
+
+          if (data.floor1) {
+            document.getElementById('temp-floor1').textContent = `${data.floor1.temp}°C`;
+            document.getElementById('hum-floor1').textContent = `${data.floor1.hum}%`;
+
+            setToggleState(document.querySelector('.toggle-led1'), data.floor1.led);
+            setToggleState(document.querySelector('.toggle-fan1'), data.floor1.fan);
+            setToggleState(document.querySelector('.toggle-fog1'), data.floor1.fog);
+            setToggleState(document.querySelector('.toggle-heater1'), data.floor1.heater);
+
+            const t1 = parseFloat(data.floor1.temp);
+            const h1 = parseFloat(data.floor1.hum);
+            if (!isNaN(t1) && !isNaN(h1) && t1 > 0 && h1 > 0) {
+              const now = new Date();
+              const hourFloat = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+
+              const lastPoint = tempPoints1[tempPoints1.length - 1];
+              if (!lastPoint || Math.abs(lastPoint.y - t1) > 0.01 || Math.abs(lastPoint.x - hourFloat) > 0.001) {
+                tempPoints1.push({ x: hourFloat, y: t1 });
+                humPoints1.push({ x: hourFloat, y: h1 });
+                
+                updateChartScale(chart1, tempPoints1, humPoints1);
+                chart1.update();
+              }
+            }
+          }
+
+          if (data.floor2) {
+            document.getElementById('temp-floor2').textContent = `${data.floor2.temp}°C`;
+            document.getElementById('hum-floor2').textContent = `${data.floor2.hum}%`;
+
+            setToggleState(document.querySelector('.toggle-led2'), data.floor2.led);
+            setToggleState(document.querySelector('.toggle-fan2'), data.floor2.fan);
+            setToggleState(document.querySelector('.toggle-fog2'), data.floor2.fog);
+            setToggleState(document.querySelector('.toggle-heater2'), data.floor2.heater);
+
+            const t2 = parseFloat(data.floor2.temp);
+            const h2 = parseFloat(data.floor2.hum);
+            if (!isNaN(t2) && !isNaN(h2) && t2 > 0 && h2 > 0) {
+              const now = new Date();
+              const hourFloat = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+
+              const lastPoint = tempPoints2[tempPoints2.length - 1];
+              if (!lastPoint || Math.abs(lastPoint.y - t2) > 0.01 || Math.abs(lastPoint.x - hourFloat) > 0.001) {
+                tempPoints2.push({ x: hourFloat, y: t2 });
+                humPoints2.push({ x: hourFloat, y: h2 });
+                
+                updateChartScale(chart2, tempPoints2, humPoints2);
+                chart2.update();
+              }
+            }
+          }
+
+          lastDataCheck = Date.now();
+        })
+        .catch(err => console.log("Error:", err));
+    }
+
+    // ==================== CAMERA TRONG MAIN CONTENT ====================
+    function showCameraMain() {
+      const cameraContainer = document.getElementById('camera-main-container');
+      const chartsContainer = document.querySelector('.charts-container');
+      const dashboardOverview = document.querySelector('.dashboard-overview');
+      const reportGeneration = document.querySelector('.report-generation');
+      
+      // Ẩn các thành phần khác
+      chartsContainer.style.display = 'none';
+      dashboardOverview.style.display = 'none';
+      reportGeneration.style.display = 'none';
+      
+      // Hiện camera
+      cameraContainer.classList.add('active');
+      
+      // Load camera stream
+      const iframe = document.getElementById('camera-main-iframe');
+      iframe.src = CAMERA_WEB_URL + '/';
+      
+      console.log('Camera main view opened');
+    }
+
+    function closeCameraMain() {
+      const cameraContainer = document.getElementById('camera-main-container');
+      const chartsContainer = document.querySelector('.charts-container');
+      const dashboardOverview = document.querySelector('.dashboard-overview');
+      const reportGeneration = document.querySelector('.report-generation');
+      
+      // Ẩn camera
+      cameraContainer.classList.remove('active');
+      
+      // Hiện lại các thành phần
+      chartsContainer.style.display = 'block';
+      dashboardOverview.style.display = 'grid';
+      reportGeneration.style.display = 'block';
+      
+      // Dừng camera stream
+      const iframe = document.getElementById('camera-main-iframe');
+      iframe.src = '';
+      
+      // Ẩn detection section
+      const detectionSection = document.getElementById('detection-main-section');
+      detectionSection.classList.remove('active');
+      
+      console.log('Camera main view closed');
+    }
+
+    function toggleDetectionMainSection() {
+      const section = document.getElementById('detection-main-section');
+      const isActive = section.classList.contains('active');
+      
+      if (isActive) {
+        section.classList.remove('active');
+      } else {
+        section.classList.add('active');
+        loadDetectionDataMain(1);
+      }
+    }
+
+    async function fetchDetectionHistory(day) {
+      try {
+        const response = await fetch(`${SERVER_URL}/detection-history?day=${day}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          return data.data || [];
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching detection history:', error);
+        return [];
+      }
+    }
+
+    async function loadDetectionDataMain(day) {
+      currentDetectionDay = day;
+      
+      document.querySelectorAll('#detection-main-section .day-btn').forEach(btn => {
+        if (parseInt(btn.dataset.day) === day) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      const frames = await fetchDetectionHistory(day);
+      displayDetectionFramesMain(frames);
+      
+      const dayBtn = document.querySelector(`#detection-main-section .day-btn[data-day="${day}"]`);
+      if (dayBtn) {
+        dayBtn.setAttribute('data-count', frames.length);
+      }
+    }
+
+    function displayDetectionFramesMain(frames) {
+      const grid = document.getElementById('detection-frames-grid-main');
+      grid.setAttribute('data-day', currentDetectionDay);
+      
+      const headerTitle = document.querySelector('#detection-main-section .detection-header h3');
+      if (headerTitle) {
+        const dayLabels = { 1: 'Hôm nay', 2: 'Hôm qua', 3: 'Hôm kia' };
+        headerTitle.innerHTML = `
+          🔍 Lịch sử phát hiện sinh vật lạ
+          <span style="font-size: 14px; color: #999; margin-left: 10px;">
+            (${dayLabels[currentDetectionDay]}: ${frames.length} frame)
+          </span>
+        `;
+      }
+      
+      if (frames.length === 0) {
+        grid.innerHTML = `
+          <div class="no-detection">
+            <div class="no-detection-icon">📭</div>
+            <p>Chưa có dữ liệu phát hiện cho ngày này</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = frames.map(frame => `
+        <div class="detection-frame" data-frame-id="${frame.id}">
+          <div class="detection-frame-image">
+            ${frame.imageUrl ? 
+              `<img src="${frame.imageUrl}" alt="Detection frame" />` :
+              frame.imageBase64 ?
+              `<img src="data:image/jpeg;base64,${frame.imageBase64}" alt="Detection frame" />` :
+              `<div class="detection-frame-placeholder">
+                <span>📷</span>
+                <span style="font-size: 11px;">Chưa có ảnh</span>
+              </div>`
+            }
+          </div>
+          <div class="detection-frame-info">
+            <div class="detection-frame-time">${new Date(frame.timestamp).toLocaleString('vi-VN')}</div>
+            <div class="detection-frame-status">${frame.description || 'Phát hiện sinh vật lạ'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openCameraFull() {
+      window.open(CAMERA_WEB_URL + '/', '_blank');
+    }
+
+    // ==================== THỜI TIẾT ====================
+    async function fetchWeather() {
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${WEATHER_CITY},${WEATHER_COUNTRY}&appid=${WEATHER_API_KEY}&units=metric&lang=vi`;
+        
+        const response = await fetch(url);
+        weatherData = await response.json();
+        
+        if (weatherData.cod === 200) {
+          console.log('Weather updated:', weatherData);
+        } else {
+          console.error('Weather API error:', weatherData);
+        }
+      } catch (error) {
+        console.error('Weather fetch error:', error);
+      }
+    }
+
+    function showWeatherModal() {
+      if (!weatherData || weatherData.cod !== 200) {
+        alert('Đang tải dữ liệu thời tiết...');
+        fetchWeather();
+        return;
+      }
+
+      const iconCode = weatherData.weather[0].icon;
+      const weatherIcon = WEATHER_ICONS[iconCode] || '🌤️';
+      
+      let description = weatherData.weather[0].description;
+      description = WEATHER_TRANSLATIONS[description.toLowerCase()] || description;
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'weather-modal';
+      
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>☀️ Thông tin thời tiết</h2>
+            <button class="modal-close" onclick="closeWeatherModal()">×</button>
+          </div>
+
+          <div class="weather-modal-body">
+            <div class="weather-hero-card">
+              <div class="weather-hero-content">
+                <div class="weather-main-icon">${weatherIcon}</div>
+                <div class="weather-main-temp">${Math.round(weatherData.main.temp)}°C</div>
+                <div class="weather-main-desc">${description}</div>
+                <div class="weather-main-location">
+                  📍 ${weatherData.name}, ${weatherData.sys.country}
+                </div>
+              </div>
+            </div>
+
+            <div class="weather-details-section">
+              <div class="weather-details-grid-new">
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">🌡️</div>
+                  <div class="weather-info-label">Cảm giác</div>
+                  <div class="weather-info-value">${Math.round(weatherData.main.feels_like)}°C</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">💧</div>
+                  <div class="weather-info-label">Độ ẩm</div>
+                  <div class="weather-info-value">${weatherData.main.humidity}%</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">💨</div>
+                  <div class="weather-info-label">Tốc độ gió</div>
+                  <div class="weather-info-value">${weatherData.wind.speed.toFixed(1)} m/s</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">📊</div>
+                  <div class="weather-info-label">Áp suất</div>
+                  <div class="weather-info-value">${weatherData.main.pressure} hPa</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">🌡️</div>
+                  <div class="weather-info-label">Nhiệt độ min</div>
+                  <div class="weather-info-value">${Math.round(weatherData.main.temp_min)}°C</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">🌡️</div>
+                  <div class="weather-info-label">Nhiệt độ max</div>
+                  <div class="weather-info-value">${Math.round(weatherData.main.temp_max)}°C</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">👁️</div>
+                  <div class="weather-info-label">Tầm nhìn</div>
+                  <div class="weather-info-value">${(weatherData.visibility / 1000).toFixed(1)} km</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">☁️</div>
+                  <div class="weather-info-label">Mây che phủ</div>
+                  <div class="weather-info-value">${weatherData.clouds.all}%</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">🌅</div>
+                  <div class="weather-info-label">Mặt trời mọc</div>
+                  <div class="weather-info-value">${new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</div>
+                </div>
+
+                <div class="weather-info-item">
+                  <div class="weather-info-icon">🌇</div>
+                  <div class="weather-info-label">Mặt trời lặn</div>
+                  <div class="weather-info-value">${new Date(weatherData.sys.sunset * 1000).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="weather-footer">
+              <p><strong>Dữ liệu từ OpenWeatherMap</strong></p>
+              <p>Cập nhật: ${new Date().toLocaleString('vi-VN')}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      modal.style.display = 'block';
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeWeatherModal();
+        }
+      });
+    }
+
+    function closeWeatherModal() {
+      const modal = document.getElementById('weather-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    // ==================== ĐIỆN NĂNG ====================
+    async function fetchEnergyReport() {
+      try {
+        const res = await fetch(`${SERVER_URL}/energy-report`);
+        energyData = await res.json();
+        console.log('Energy report updated:', energyData);
+      } catch (error) {
+        console.error('Error fetching energy report:', error);
+      }
+    }
+
+    function showEnergyDetail() {
+      if (!energyData) {
+        alert('Đang tải dữ liệu...');
+        return;
+      }
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'energy-modal';
+      
+      modal.innerHTML = `
+        <div class="modal-content energy-modal-content">
+          <div class="modal-header energy-modal-header">
+            <h2 style="margin: 0; color: #667eea;">⚡ Báo cáo điện năng chi tiết</h2>
+            <button class="modal-close" onclick="closeEnergyModal()">×</button>
+          </div>
+          
+          <div class="config-section">
+            <h3 style="margin: 0 0 10px 0; color: #856404;">⚙️ Cấu hình công suất & giá điện</h3>
+            <div class="config-grid">
+              <div class="config-item">
+                <label>LED (W):</label>
+                <input type="number" id="power-led" value="${energyData.devicePower.led}" min="0" step="1">
+              </div>
+              <div class="config-item">
+                <label>Quạt (W):</label>
+                <input type="number" id="power-fan" value="${energyData.devicePower.fan}" min="0" step="1">
+              </div>
+              <div class="config-item">
+                <label>Phun sương (W):</label>
+                <input type="number" id="power-fog" value="${energyData.devicePower.fog}" min="0" step="1">
+              </div>
+              <div class="config-item">
+                <label>Sưởi (W):</label>
+                <input type="number" id="power-heater" value="${energyData.devicePower.heater}" min="0" step="1">
+              </div>
+              <div class="config-item">
+                <label>Giá điện (₫/kWh):</label>
+                <input type="number" id="electricity-price" value="${energyData.electricityPrice}" min="0" step="100">
+              </div>
+            </div>
+            <button onclick="updateEnergyConfig()" style="margin-top: 15px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+              💾 Lưu cấu hình
+            </button>
+          </div>
+          
+          <div class="energy-section" style="border-left-color: #28a745;">
+            <h3>📊 Tổng hợp (2 tầng)</h3>
+            <div class="energy-grid">
+              <div class="energy-item">
+                <div class="energy-item-label">Điện tiêu thụ hôm nay</div>
+                <div class="energy-item-value" style="color: #dc3545;">${energyData.total.daily.totalEnergyKWh} kWh</div>
+              </div>
+              <div class="energy-item">
+                <div class="energy-item-label">Chi phí hôm nay</div>
+                <div class="energy-item-value" style="color: #28a745;">${energyData.total.daily.totalCostFormatted}</div>
+              </div>
+              <div class="energy-item">
+                <div class="energy-item-label">Ước tính tháng (×30)</div>
+                <div class="energy-item-value" style="color: #ff9800;">${energyData.total.monthly.estimatedEnergyKWh} kWh</div>
+              </div>
+              <div class="energy-item">
+                <div class="energy-item-label">Chi phí tháng ước tính</div>
+                <div class="energy-item-value" style="color: #007bff;">${energyData.total.monthly.estimatedCostFormatted}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="energy-section" style="border-left-color: #1976d2;">
+            <h3>🏢 Tầng 1</h3>
+            ${generateFloorEnergyHTML(energyData.floor1, 1)}
+          </div>
+          
+          <div class="energy-section" style="border-left-color: #f57c00;">
+            <h3>🏢 Tầng 2</h3>
+            ${generateFloorEnergyHTML(energyData.floor2, 2)}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      modal.style.display = 'block';
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeEnergyModal();
+        }
+      });
+    }
+
+    function generateFloorEnergyHTML(floorData, floorNum) {
+      let html = `
+        <div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 6px;">
+          <strong>Tổng hôm nay:</strong> ${floorData.daily.totalEnergy} kWh = ${floorData.daily.totalCostFormatted}<br>
+          <strong>Ước tính tháng:</strong> ${floorData.monthly.estimatedEnergyKWh} kWh = ${floorData.monthly.estimatedCostFormatted}
+        </div>
+        <div class="energy-grid">
+      `;
+      
+      const deviceNames = {
+        led: 'LED',
+        fan: 'Quạt',
+        fog: 'Phun sương',
+        heater: 'Sưởi'
+      };
+      
+      for (const [device, data] of Object.entries(floorData.daily.devices)) {
+        html += `
+          <div class="energy-item">
+            <div class="energy-item-label">${deviceNames[device]}</div>
+            <div style="font-size: 12px; color: #666; margin: 5px 0;">
+              ${data.runtimeFormatted}<br>
+              ${data.powerW}W × ${data.runtimeHours}h
+            </div>
+            <div class="energy-item-value">${data.energyKWh} kWh</div>
+            <div style="font-size: 14px; font-weight: bold; color: #28a745;">${data.costFormatted}</div>
+          </div>
+        `;
+      }
+      
+      html += `</div>`;
+      return html;
+    }
+
+    function closeEnergyModal() {
+      const modal = document.getElementById('energy-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    async function updateEnergyConfig() {
+      const powerLed = document.getElementById('power-led').value;
+      const powerFan = document.getElementById('power-fan').value;
+      const powerFog = document.getElementById('power-fog').value;
+      const powerHeater = document.getElementById('power-heater').value;
+      const price = document.getElementById('electricity-price').value;
+      
+      try {
+        await fetch(`${SERVER_URL}/update-power`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device: 'led', power: powerLed })
+        });
+        
+        await fetch(`${SERVER_URL}/update-power`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device: 'fan', power: powerFan })
+        });
+        
+        await fetch(`${SERVER_URL}/update-power`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device: 'fog', power: powerFog })
+        });
+        
+        await fetch(`${SERVER_URL}/update-power`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device: 'heater', power: powerHeater })
+        });
+        
+        await fetch(`${SERVER_URL}/update-price`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ price: price })
+        });
+        
+        alert('Đã lưu cấu hình thành công!');
+        
+        closeEnergyModal();
+        await fetchEnergyReport();
+        
+      } catch (error) {
+        console.error('Error updating config:', error);
+        alert('Lỗi khi lưu cấu hình!');
+      }
+    }
+
+    // ==================== THỐNG KÊ ====================
+    async function fetchStatsData() {
+      try {
+        const response = await fetch(`${SERVER_URL}/stats-detail`);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        return null;
+      }
+    }
+
+    async function showStatsModal() {
+      const statsData = await fetchStatsData();
+      
+      if (!statsData) {
+        alert('Không thể tải dữ liệu thống kê!');
+        return;
+      }
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'stats-modal';
+      
+      modal.innerHTML = `
+        <div class="modal-content stats-modal-content">
+          <div class="modal-header">
+            <h2>📊 Thống kê hệ thống</h2>
+            <button class="modal-close" onclick="closeStatsModal()">×</button>
+          </div>
+          
+          <div class="stats-modal-body">
+            <div class="stats-filters">
+              <select id="stats-floor-filter">
+                <option value="all">Tất cả tầng</option>
+                <option value="1">Tầng 1</option>
+                <option value="2">Tầng 2</option>
+              </select>
+              
+              <input type="date" id="stats-date-from" />
+              <input type="date" id="stats-date-to" />
+              
+              <button onclick="refreshStatsData()">🔄 Làm mới</button>
+            </div>
+
+            <div class="stats-summary-cards">
+              <div class="stats-summary-card" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
+                <h4>🌡️ Nhiệt độ TB</h4>
+                <p>${statsData.summary.avgTemp}°C</p>
+              </div>
+              
+              <div class="stats-summary-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <h4>💧 Độ ẩm TB</h4>
+                <p>${statsData.summary.avgHum}%</p>
+              </div>
+              
+              <div class="stats-summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <h4>⚡ Điện tiêu thụ</h4>
+                <p>${statsData.summary.totalEnergy} kWh</p>
+              </div>
+              
+              <div class="stats-summary-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <h4>💰 Chi phí</h4>
+                <p>${statsData.summary.totalCost}</p>
+              </div>
+            </div>
+
+            <div class="stats-table-section">
+              <h3>🏢 Tầng 1 - Lịch sử hoạt động</h3>
+              <div class="stats-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Thời gian</th>
+                      <th>Nhiệt độ</th>
+                      <th>Độ ẩm</th>
+                      <th>LED</th>
+                      <th>Quạt</th>
+                      <th>Sưởi</th>
+                      <th>Phun sương</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${generateStatsTableRows(statsData.floor1)}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="stats-table-section">
+              <h3>🏢 Tầng 2 - Lịch sử hoạt động</h3>
+              <div class="stats-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Thời gian</th>
+                      <th>Nhiệt độ</th>
+                      <th>Độ ẩm</th>
+                      <th>LED</th>
+                      <th>Quạt</th>
+                      <th>Sưởi</th>
+                      <th>Phun sương</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${generateStatsTableRows(statsData.floor2)}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      modal.style.display = 'block';
+      
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      document.getElementById('stats-date-from').valueAsDate = yesterday;
+      document.getElementById('stats-date-to').valueAsDate = today;
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeStatsModal();
+        }
+      });
+    }
+
+    function generateStatsTableRows(floorData) {
+      if (!floorData || floorData.length === 0) {
+        return '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Chưa có dữ liệu</td></tr>';
+      }
+      
+      return floorData.slice(0, 20).map(record => `
+        <tr>
+          <td>${new Date(record.timestamp).toLocaleString('vi-VN')}</td>
+          <td><strong>${record.temperature}°C</strong></td>
+          <td><strong>${record.humidity}%</strong></td>
+          <td><span class="stats-device-status ${record.led === 'ON' ? 'on' : 'off'}">${record.led}</span></td>
+          <td><span class="stats-device-status ${record.fan === 'ON' ? 'on' : 'off'}">${record.fan}</span></td>
+          <td><span class="stats-device-status ${record.heater === 'ON' ? 'on' : 'off'}">${record.heater}</span></td>
+          <td><span class="stats-device-status ${record.fog === 'ON' ? 'on' : 'off'}">${record.fog}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function closeStatsModal() {
+      const modal = document.getElementById('stats-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    async function refreshStatsData() {
+      const floor = document.getElementById('stats-floor-filter').value;
+      const dateFrom = document.getElementById('stats-date-from').value;
+      const dateTo = document.getElementById('stats-date-to').value;
+      
+      console.log('Filtering stats:', { floor, dateFrom, dateTo });
+      
+      closeStatsModal();
+      await showStatsModal();
+    }
+
+    // ==================== ĐIỀU KHIỂN THIẾT BỊ ====================
+    function setupDeviceControl(floor) {
+      const devices = ['led', 'fan', 'fog', 'heater'];
+      
+      devices.forEach(device => {
+        const btn = document.querySelector(`.toggle-${device}${floor}`);
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+          const isOn = btn.classList.contains('active');
+          const newState = isOn ? 'OFF' : 'ON';
+
+          btn.style.opacity = '0.6';
+          btn.textContent = '...';
+
+          fetch(`${SERVER_URL}/floor${floor}/${device}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: newState })
+          })
+            .then(res => res.json())
+            .then(data => {
+              console.log(`Floor ${floor} ${device} response:`, data);
+              
+              setToggleState(btn, data[device] || newState);
+              btn.style.opacity = '1';
+
+              setTimeout(() => {
+                fetchData();
+                fetchStats();
+              }, 200);
+            })
+            .catch(err => {
+              console.error(`Floor ${floor} ${device} error:`, err);
+              btn.style.opacity = '1';
+              setToggleState(btn, isOn ? 'ON' : 'OFF');
+              alert('Không thể kết nối với server!');
+            });
+        });
+      });
+    }
+
+    // ==================== MENU HAMBURGER ====================
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const menuDropdown = document.getElementById('menu-dropdown');
+
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hamburgerBtn.classList.toggle('active');
+      menuDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!hamburgerBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+        hamburgerBtn.classList.remove('active');
+        menuDropdown.classList.remove('show');
+      }
+    });
+
+    menuDropdown.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        setTimeout(() => {
+          hamburgerBtn.classList.remove('active');
+          menuDropdown.classList.remove('show');
+        }, 200);
+      }
+    });
+
+    // ==================== NÚT CHỨC NĂNG ====================
+    document.getElementById('show-weather-btn').addEventListener('click', () => {
+      showWeatherModal();
+      fetchWeather();
+    });
+
+    document.getElementById('show-energy-btn').addEventListener('click', () => {
+      showEnergyDetail();
+    });
+
+    document.getElementById('show-stats-btn').addEventListener('click', () => {
+      showStatsModal();
+    });
+
+    document.getElementById('show-camera-btn-sidebar').addEventListener('click', () => {
+      showCameraMain();
+    });
+
+    // ==================== NÚT CHUYỂN TẦNG ====================
+    document.querySelectorAll('.floor-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const floor = parseInt(btn.dataset.floor);
+        switchFloor(floor);
+      });
+    });
+
+    // ==================== KHỞI ĐỘNG ====================
+    document.getElementById('start-date').valueAsDate = new Date();
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    loadHistory(1);
+    loadHistory(2);
+    fetchData();
+    fetchStats();
+    fetchEnergyReport();
+    fetchWeather();
+
+    setupDeviceControl(1);
+    setupDeviceControl(2);
+
+    setInterval(fetchData, POLLING_INTERVAL);
+    setInterval(fetchStats, 60000);
+    setInterval(fetchEnergyReport, 10000);
+    setInterval(fetchWeather, WEATHER_UPDATE_INTERVAL);
+
+    setInterval(() => {
+      const timeSinceLastUpdate = Date.now() - lastDataCheck;
+      if (timeSinceLastUpdate > 10000) {
+        console.warn('Mất kết nối với server?');
+      }
+    }, 5000);
+
+    switchFloor(1);
+
+    console.log('Hệ thống đã khởi động thành công!');
+  </script>
+</body>
+</html>
