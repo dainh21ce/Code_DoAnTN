@@ -166,6 +166,71 @@
       letter-spacing: 0.6px;
     }
 
+    /* ==================== NÚT CHẾ ĐỘ AUTO/MANUAL ==================== */
+    .mode-toggle-container {
+      margin-bottom: 15px;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .mode-toggle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .mode-toggle-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-toggle-btn {
+      padding: 8px 20px;
+      border: 2px solid white;
+      border-radius: 20px;
+      background: white;
+      color: #667eea;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .mode-toggle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .mode-toggle-btn.auto-mode {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      border-color: #43e97b;
+    }
+
+    .mode-toggle-btn.manual-mode {
+      background: white;
+      color: #667eea;
+      border-color: white;
+    }
+
+    .mode-status-text {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
     .device-control {
       display: flex;
       align-items: center;
@@ -176,6 +241,13 @@
       background-color: #ffffff;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+
+    .device-control.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      background-color: #f5f5f5;
     }
 
     .device-control span {
@@ -208,6 +280,11 @@
 
     .toggle-btn.active {
       background-color: #28a745;
+    }
+
+    .toggle-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
     }
 
     /* ==================== DASHBOARD TỔNG QUAN ==================== */
@@ -902,7 +979,7 @@
 
     .stats-summary-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmin(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
       margin-bottom: 25px;
     }
@@ -1435,6 +1512,16 @@
         font-size: 13px;
       }
 
+      .mode-toggle-btn {
+        padding: 6px 15px;
+        font-size: 13px;
+        min-width: 85px;
+      }
+
+      .mode-toggle-label {
+        font-size: 13px;
+      }
+
       .dashboard-overview {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
@@ -1670,6 +1757,23 @@
         <!-- ĐIỀU KHIỂN TẦNG 1 -->
         <div class="device-controls active" data-floor-controls="1">
           <h3>Điều khiển Tầng 1</h3>
+          
+          <!-- NÚT CHẾ ĐỘ AUTO/MANUAL -->
+          <div class="mode-toggle-container">
+            <div class="mode-toggle-header">
+              <span class="mode-toggle-label">
+                <span>🤖</span>
+                <span>Chế độ:</span>
+              </span>
+              <button class="mode-toggle-btn manual-mode" data-floor="1" onclick="toggleControlMode(1)">
+                MANUAL
+              </button>
+            </div>
+            <div class="mode-status-text" id="mode-status-text-1">
+              Đang điều khiển thủ công
+            </div>
+          </div>
+
           <div class="device-control">
             <span>LED</span>
             <button class="toggle-btn toggle-led1" data-device="led" data-floor="1">OFF</button>
@@ -1691,6 +1795,23 @@
         <!-- ĐIỀU KHIỂN TẦNG 2 -->
         <div class="device-controls" data-floor-controls="2">
           <h3>Điều khiển Tầng 2</h3>
+          
+          <!-- NÚT CHẾ ĐỘ AUTO/MANUAL -->
+          <div class="mode-toggle-container">
+            <div class="mode-toggle-header">
+              <span class="mode-toggle-label">
+                <span>🤖</span>
+                <span>Chế độ:</span>
+              </span>
+              <button class="mode-toggle-btn manual-mode" data-floor="2" onclick="toggleControlMode(2)">
+                MANUAL
+              </button>
+            </div>
+            <div class="mode-status-text" id="mode-status-text-2">
+              Đang điều khiển thủ công
+            </div>
+          </div>
+
           <div class="device-control">
             <span>LED</span>
             <button class="toggle-btn toggle-led2" data-device="led" data-floor="2">OFF</button>
@@ -1833,6 +1954,12 @@
     let currentFloor = 1;
     let currentDetectionDay = 1;
 
+    // TRẠNG THÁI CHẾ ĐỘ ĐIỀU KHIỂN
+    let controlMode = {
+      floor1: 'manual', // 'auto' hoặc 'manual'
+      floor2: 'manual'
+    };
+
     const tempPoints1 = [];
     const humPoints1  = [];
     const tempPoints2 = [];
@@ -1868,6 +1995,133 @@
       'haze': 'Sương mù nhẹ',
       'fog': 'Sương mù dày đặc'
     };
+
+    // ==================== CHUYỂN CHẾ ĐỘ AUTO/MANUAL ====================
+    function toggleControlMode(floor) {
+      const floorKey = `floor${floor}`;
+      const currentMode = controlMode[floorKey];
+      const newMode = currentMode === 'manual' ? 'auto' : 'manual';
+      
+      // Cập nhật trạng thái
+      controlMode[floorKey] = newMode;
+      
+      // Cập nhật UI
+      updateControlModeUI(floor, newMode);
+      
+      // Gửi request đến server
+      fetch(`${SERVER_URL}/floor${floor}/mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newMode })
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log(`Floor ${floor} mode changed to ${newMode}:`, data);
+          
+          // Hiển thị thông báo
+          showModeChangeNotification(floor, newMode);
+        })
+        .catch(err => {
+          console.error(`Error changing mode for floor ${floor}:`, err);
+          // Rollback nếu lỗi
+          controlMode[floorKey] = currentMode;
+          updateControlModeUI(floor, currentMode);
+          alert('Không thể thay đổi chế độ! Vui lòng thử lại.');
+        });
+    }
+
+    function updateControlModeUI(floor, mode) {
+      const btn = document.querySelector(`.mode-toggle-btn[data-floor="${floor}"]`);
+      const statusText = document.getElementById(`mode-status-text-${floor}`);
+      const deviceControls = document.querySelectorAll(`[data-floor-controls="${floor}"] .device-control`);
+      const deviceButtons = document.querySelectorAll(`[data-floor-controls="${floor}"] .toggle-btn`);
+      
+      if (mode === 'auto') {
+        // Chế độ AUTO
+        btn.classList.remove('manual-mode');
+        btn.classList.add('auto-mode');
+        btn.innerHTML = '🤖 AUTO';
+        statusText.textContent = '✨ Hệ thống tự động điều khiển';
+        
+        // Vô hiệu hóa các nút điều khiển
+        deviceControls.forEach(control => control.classList.add('disabled'));
+        deviceButtons.forEach(button => button.disabled = true);
+        
+      } else {
+        // Chế độ MANUAL
+        btn.classList.remove('auto-mode');
+        btn.classList.add('manual-mode');
+        btn.innerHTML = '👤 MANUAL';
+        statusText.textContent = 'Đang điều khiển thủ công';
+        
+        // Kích hoạt lại các nút điều khiển
+        deviceControls.forEach(control => control.classList.remove('disabled'));
+        deviceButtons.forEach(button => button.disabled = false);
+      }
+    }
+
+    function showModeChangeNotification(floor, mode) {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        background: ${mode === 'auto' ? 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+        color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        animation: slideInRight 0.3s ease;
+      `;
+      
+      const modeText = mode === 'auto' ? '🤖 Chế độ tự động' : '👤 Chế độ thủ công';
+      notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">${mode === 'auto' ? '🤖' : '👤'}</span>
+          <div>
+            <div style="font-size: 16px; margin-bottom: 3px;">Tầng ${floor}</div>
+            <div style="font-size: 13px; opacity: 0.9;">${modeText}</div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Tự động xóa sau 3 giây
+      setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // CSS animation cho notification
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(100px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      
+      @keyframes slideOutRight {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(100px);
+        }
+      }
+    `;
+    document.head.appendChild(style);
 
     // ==================== CHUYỂN TẦNG ====================
     function switchFloor(floor) {
@@ -2237,15 +2491,12 @@
       const dashboardOverview = document.querySelector('.dashboard-overview');
       const reportGeneration = document.querySelector('.report-generation');
       
-      // Ẩn các thành phần khác
       chartsContainer.style.display = 'none';
       dashboardOverview.style.display = 'none';
       reportGeneration.style.display = 'none';
       
-      // Hiện camera
       cameraContainer.classList.add('active');
       
-      // Load camera stream
       const iframe = document.getElementById('camera-main-iframe');
       iframe.src = CAMERA_WEB_URL + '/';
       
@@ -2258,19 +2509,15 @@
       const dashboardOverview = document.querySelector('.dashboard-overview');
       const reportGeneration = document.querySelector('.report-generation');
       
-      // Ẩn camera
       cameraContainer.classList.remove('active');
       
-      // Hiện lại các thành phần
       chartsContainer.style.display = 'block';
       dashboardOverview.style.display = 'grid';
       reportGeneration.style.display = 'block';
       
-      // Dừng camera stream
       const iframe = document.getElementById('camera-main-iframe');
       iframe.src = '';
       
-      // Ẩn detection section
       const detectionSection = document.getElementById('detection-main-section');
       detectionSection.classList.remove('active');
       
@@ -2884,6 +3131,13 @@
         if (!btn) return;
 
         btn.addEventListener('click', () => {
+          // Kiểm tra chế độ điều khiển
+          const floorKey = `floor${floor}`;
+          if (controlMode[floorKey] === 'auto') {
+            alert('Hệ thống đang ở chế độ AUTO. Vui lòng chuyển sang chế độ MANUAL để điều khiển thủ công!');
+            return;
+          }
+
           const isOn = btn.classList.contains('active');
           const newState = isOn ? 'OFF' : 'ON';
 

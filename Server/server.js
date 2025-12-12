@@ -21,7 +21,47 @@ const CONFIG = {
     heater: 150
   },
   electricityPrice: 2500,
-  maxHistory: 1000
+  maxHistory: 1000,
+  autoMode: {
+    floor1: {
+      enabled: false,
+      rules: {
+        temperature: {
+          min: 25,
+          max: 30,
+          heaterOn: 24,    // Bật sưởi nếu nhiệt độ < 24°C
+          heaterOff: 26,   // Tắt sưởi nếu nhiệt độ > 26°C
+          fanOn: 29,       // Bật quạt nếu nhiệt độ > 29°C
+          fanOff: 27       // Tắt quạt nếu nhiệt độ < 27°C
+        },
+        humidity: {
+          min: 60,
+          max: 80,
+          fogOn: 65,       // Bật phun sương nếu độ ẩm < 65%
+          fogOff: 75       // Tắt phun sương nếu độ ẩm > 75%
+        }
+      }
+    },
+    floor2: {
+      enabled: false,
+      rules: {
+        temperature: {
+          min: 25,
+          max: 30,
+          heaterOn: 24,
+          heaterOff: 26,
+          fanOn: 29,
+          fanOff: 27
+        },
+        humidity: {
+          min: 60,
+          max: 80,
+          fogOn: 65,
+          fogOff: 75
+        }
+      }
+    }
+  }
 };
 
 // ==================== DATA STORAGE ====================
@@ -210,6 +250,49 @@ function getLocalIP() {
   return 'localhost';
 }
 
+// ==================== AUTO CONTROL LOGIC ====================
+function applyAutoControl(floor) {
+  const floorKey = floor === 1 ? 'floor1' : 'floor2';
+  const autoConfig = CONFIG.autoMode[floorKey];
+
+  if (!autoConfig.enabled) {
+    return; // Chế độ manual, không làm gì
+  }
+
+  const temp = floorData[floorKey].temperature;
+  const hum = floorData[floorKey].humidity;
+  const rules = autoConfig.rules;
+
+  console.log(`🤖 AUTO MODE - ${floorKey.toUpperCase()}: Temp=${temp}°C, Hum=${hum}%`);
+
+  // Điều khiển HEATER (Sưởi)
+  if (temp < rules.temperature.heaterOn && floorData[floorKey].devices.heater === 'OFF') {
+    updateDeviceState(floorKey, 'heater', 'ON');
+    console.log(`  ➡️ Heater ON (temp < ${rules.temperature.heaterOn}°C)`);
+  } else if (temp > rules.temperature.heaterOff && floorData[floorKey].devices.heater === 'ON') {
+    updateDeviceState(floorKey, 'heater', 'OFF');
+    console.log(`  ➡️ Heater OFF (temp > ${rules.temperature.heaterOff}°C)`);
+  }
+
+  // Điều khiển FAN (Quạt)
+  if (temp > rules.temperature.fanOn && floorData[floorKey].devices.fan === 'OFF') {
+    updateDeviceState(floorKey, 'fan', 'ON');
+    console.log(`  ➡️ Fan ON (temp > ${rules.temperature.fanOn}°C)`);
+  } else if (temp < rules.temperature.fanOff && floorData[floorKey].devices.fan === 'ON') {
+    updateDeviceState(floorKey, 'fan', 'OFF');
+    console.log(`  ➡️ Fan OFF (temp < ${rules.temperature.fanOff}°C)`);
+  }
+
+  // Điều khiển FOG (Phun sương)
+  if (hum < rules.humidity.fogOn && floorData[floorKey].devices.fog === 'OFF') {
+    updateDeviceState(floorKey, 'fog', 'ON');
+    console.log(`  ➡️ Fog ON (hum < ${rules.humidity.fogOn}%)`);
+  } else if (hum > rules.humidity.fogOff && floorData[floorKey].devices.fog === 'ON') {
+    updateDeviceState(floorKey, 'fog', 'OFF');
+    console.log(`  ➡️ Fog OFF (hum > ${rules.humidity.fogOff}%)`);
+  }
+}
+
 // ==================== API: HOME ====================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'client.html'));
@@ -289,6 +372,9 @@ app.post('/floor1', (req, res) => {
 
   console.log(`Floor 1 - Temp: ${temp}°C | Hum: ${hum}%`);
 
+  // Áp dụng điều khiển tự động nếu bật
+  applyAutoControl(1);
+
   const devices = floorData.floor1.devices;
   const response = `LED_${devices.led} FAN_${devices.fan} FOG_${devices.fog} HEATER_${devices.heater}`;
   res.send(response);
@@ -302,6 +388,9 @@ app.post('/floor2', (req, res) => {
   addSensorData('floor2', temp, hum);
 
   console.log(`Floor 2 - Temp: ${temp}°C | Hum: ${hum}%`);
+
+  // Áp dụng điều khiển tự động nếu bật
+  applyAutoControl(2);
 
   const devices = floorData.floor2.devices;
   const response = `LED_${devices.led} FAN_${devices.fan} FOG_${devices.fog} HEATER_${devices.heater}`;
@@ -322,6 +411,7 @@ app.post('/update', (req, res) => {
 
       if (!Number.isNaN(t) && !Number.isNaN(h)) {
         addSensorData('floor1', t, h);
+        applyAutoControl(1); // Áp dụng auto control
       }
 
       console.log(`ZIGBEE /update - Floor 1: Temp=${t}°C | Hum=${h}%`);
@@ -336,6 +426,7 @@ app.post('/update', (req, res) => {
 
       if (!Number.isNaN(t) && !Number.isNaN(h)) {
         addSensorData('floor2', t, h);
+        applyAutoControl(2); // Áp dụng auto control
       }
 
       console.log(`ZIGBEE /update - Floor 2: Temp=${t}°C | Hum=${h}%`);
@@ -345,6 +436,96 @@ app.post('/update', (req, res) => {
   } catch (err) {
     console.error('❌ Error in /update:', err);
     res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// ==================== API: CHANGE CONTROL MODE ====================
+app.post('/floor1/mode', (req, res) => {
+  const { mode } = req.body;
+  
+  if (mode === 'auto' || mode === 'manual') {
+    CONFIG.autoMode.floor1.enabled = (mode === 'auto');
+    console.log(`🔄 Floor 1 mode changed to: ${mode.toUpperCase()}`);
+    
+    res.json({
+      success: true,
+      floor: 1,
+      mode: mode,
+      message: `Floor 1 switched to ${mode} mode`
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      error: "Mode must be 'auto' or 'manual'"
+    });
+  }
+});
+
+app.post('/floor2/mode', (req, res) => {
+  const { mode } = req.body;
+  
+  if (mode === 'auto' || mode === 'manual') {
+    CONFIG.autoMode.floor2.enabled = (mode === 'auto');
+    console.log(`🔄 Floor 2 mode changed to: ${mode.toUpperCase()}`);
+    
+    res.json({
+      success: true,
+      floor: 2,
+      mode: mode,
+      message: `Floor 2 switched to ${mode} mode`
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      error: "Mode must be 'auto' or 'manual'"
+    });
+  }
+});
+
+// ==================== API: GET CONTROL MODE ====================
+app.get('/control-mode', (req, res) => {
+  res.json({
+    floor1: {
+      mode: CONFIG.autoMode.floor1.enabled ? 'auto' : 'manual',
+      rules: CONFIG.autoMode.floor1.rules
+    },
+    floor2: {
+      mode: CONFIG.autoMode.floor2.enabled ? 'auto' : 'manual',
+      rules: CONFIG.autoMode.floor2.rules
+    }
+  });
+});
+
+// ==================== API: UPDATE AUTO RULES ====================
+app.post('/update-auto-rules', (req, res) => {
+  const { floor, rules } = req.body;
+  
+  if (floor === 1 || floor === 2) {
+    const floorKey = `floor${floor}`;
+    
+    if (rules.temperature) {
+      CONFIG.autoMode[floorKey].rules.temperature = {
+        ...CONFIG.autoMode[floorKey].rules.temperature,
+        ...rules.temperature
+      };
+    }
+    
+    if (rules.humidity) {
+      CONFIG.autoMode[floorKey].rules.humidity = {
+        ...CONFIG.autoMode[floorKey].rules.humidity,
+        ...rules.humidity
+      };
+    }
+    
+    console.log(`⚙️ Auto rules updated for ${floorKey}`);
+    
+    res.json({
+      success: true,
+      message: 'Auto rules updated',
+      rules: CONFIG.autoMode[floorKey].rules
+    });
+  } else {
+    res.status(400).json({ error: 'Invalid floor number' });
   }
 });
 
@@ -358,6 +539,7 @@ app.get('/data', (req, res) => {
       fan: floorData.floor1.devices.fan,
       fog: floorData.floor1.devices.fog,
       heater: floorData.floor1.devices.heater,
+      mode: CONFIG.autoMode.floor1.enabled ? 'auto' : 'manual',
       runtime: {
         ledSec: getDeviceRuntime('floor1', 'led'),
         fanSec: getDeviceRuntime('floor1', 'fan'),
@@ -372,6 +554,7 @@ app.get('/data', (req, res) => {
       fan: floorData.floor2.devices.fan,
       fog: floorData.floor2.devices.fog,
       heater: floorData.floor2.devices.heater,
+      mode: CONFIG.autoMode.floor2.enabled ? 'auto' : 'manual',
       runtime: {
         ledSec: getDeviceRuntime('floor2', 'led'),
         fanSec: getDeviceRuntime('floor2', 'fan'),
@@ -497,13 +680,15 @@ app.get('/commands', (req, res) => {
       led:    floorData.floor1.devices.led,
       fan:    floorData.floor1.devices.fan,
       heater: floorData.floor1.devices.heater,
-      fog:    floorData.floor1.devices.fog
+      fog:    floorData.floor1.devices.fog,
+      mode:   CONFIG.autoMode.floor1.enabled ? 'auto' : 'manual'
     },
     floor2: {
       led:    floorData.floor2.devices.led,
       fan:    floorData.floor2.devices.fan,
       heater: floorData.floor2.devices.heater,
-      fog:    floorData.floor2.devices.fog
+      fog:    floorData.floor2.devices.fog,
+      mode:   CONFIG.autoMode.floor2.enabled ? 'auto' : 'manual'
     }
   });
 });
@@ -684,6 +869,15 @@ app.delete('/detection-delete/:id', (req, res) => {
 
 // ==================== API: DEVICE CONTROL - FLOOR 1 ====================
 app.post('/floor1/led', (req, res) => {
+  // Kiểm tra chế độ
+  if (CONFIG.autoMode.floor1.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor1', 'led', state);
@@ -694,6 +888,14 @@ app.post('/floor1/led', (req, res) => {
 });
 
 app.post('/floor1/fan', (req, res) => {
+  if (CONFIG.autoMode.floor1.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor1', 'fan', state);
@@ -704,6 +906,14 @@ app.post('/floor1/fan', (req, res) => {
 });
 
 app.post('/floor1/fog', (req, res) => {
+  if (CONFIG.autoMode.floor1.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor1', 'fog', state);
@@ -714,6 +924,14 @@ app.post('/floor1/fog', (req, res) => {
 });
 
 app.post('/floor1/heater', (req, res) => {
+  if (CONFIG.autoMode.floor1.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor1', 'heater', state);
@@ -725,6 +943,14 @@ app.post('/floor1/heater', (req, res) => {
 
 // ==================== API: DEVICE CONTROL - FLOOR 2 ====================
 app.post('/floor2/led', (req, res) => {
+  if (CONFIG.autoMode.floor2.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor2', 'led', state);
@@ -735,6 +961,14 @@ app.post('/floor2/led', (req, res) => {
 });
 
 app.post('/floor2/fan', (req, res) => {
+  if (CONFIG.autoMode.floor2.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor2', 'fan', state);
@@ -745,6 +979,14 @@ app.post('/floor2/fan', (req, res) => {
 });
 
 app.post('/floor2/fog', (req, res) => {
+  if (CONFIG.autoMode.floor2.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor2', 'fog', state);
@@ -755,6 +997,14 @@ app.post('/floor2/fog', (req, res) => {
 });
 
 app.post('/floor2/heater', (req, res) => {
+  if (CONFIG.autoMode.floor2.enabled) {
+    return res.status(403).json({
+      success: false,
+      error: 'Cannot control device in AUTO mode',
+      message: 'Please switch to MANUAL mode first'
+    });
+  }
+
   const state = (req.body.state || '').toUpperCase();
   if (state === 'ON' || state === 'OFF') {
     updateDeviceState('floor2', 'heater', state);
@@ -790,6 +1040,10 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('  - GET  /commands                   (Zigbee get commands)');
   console.log('  - POST /floor1/:device             (Control Floor 1 devices)');
   console.log('  - POST /floor2/:device             (Control Floor 2 devices)');
+  console.log('  - POST /floor1/mode                (Change Floor 1 mode)');
+  console.log('  - POST /floor2/mode                (Change Floor 2 mode)');
+  console.log('  - GET  /control-mode               (Get control mode)');
+  console.log('  - POST /update-auto-rules          (Update auto rules)');
   console.log('  - POST /update-power               (Update device power)');
   console.log('  - POST /update-price               (Update electricity price)');
   console.log('\n⚡ Device Power Configuration:');
@@ -798,6 +1052,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`  - Fog: ${CONFIG.devicePower.fog}W`);
   console.log(`  - Heater: ${CONFIG.devicePower.heater}W`);
   console.log(`💰 Electricity Price: ${CONFIG.electricityPrice.toLocaleString('vi-VN')} VND/kWh`);
+  console.log('\n🤖 Auto Control Rules:');
+  console.log(`  - Floor 1: ${CONFIG.autoMode.floor1.enabled ? 'AUTO' : 'MANUAL'}`);
+  console.log(`  - Floor 2: ${CONFIG.autoMode.floor2.enabled ? 'AUTO' : 'MANUAL'}`);
   console.log('='.repeat(60) + '\n');
   console.log('🧪 TIP: Visit http://localhost:3000/test-populate-days to create test data\n');
 });
